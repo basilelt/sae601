@@ -1,0 +1,6 @@
+[submodule "kubespray"]
+	path = kubespray
+	url = git@github.com:basilelt/kubespray.git
+[submodule "tutorial-python-microservice-tornado"]
+	path = tutorial-python-microservice-tornado
+	url = git@github.com:basilelt/tutorial-python-microservice-tornado.git
