@@ -4,6 +4,13 @@
 # https://github.com/noloader/auto-update
 
 set -e  # Exit on error
+
+# Disable swap as GitLab recommends
+echo "Disabling swap..."
+swapoff -a
+sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
+echo "Swap has been disabled."
+
 echo "Setting up auto-update script..."
 
 # Install git if not already installed

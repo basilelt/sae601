@@ -23,61 +23,65 @@ provider "proxmox" {
   }
 }
 
-resource "proxmox_lxc" "gitlab" {
+# Create a VM for GitLab
+resource "proxmox_vm_qemu" "gitlab" {
   target_node     = var.proxmox_node
-  hostname        = "gitlab.basile.local"
-  ostemplate      = "local:vztmpl/${var.debian_template}"
-  password        = var.root_password
-  unprivileged    = true
-  start           = true
-  onboot          = true
+  name            = "gitlab"
+  desc            = "GitLab Server"
+  vmid            = var.vm_id
   
-  // Resource allocation as per prerequisites in terraform_gitlab.md
-  cores  = 6
-  memory = 8192
-  swap   = 0
+  # Use Debian ISO for installation
+  iso             = "local:iso/${var.debian_iso}"
   
-  // Storage allocation - 32G as specified in docs
-  rootfs {
-    storage = var.storage_pool
-    size    = "32G"
+  # VM hardware configuration
+  cores           = 6
+  sockets         = 1
+  cpu             = "host"
+  memory          = 8192
+  
+  # VM disk
+  disk {
+    size          = "32G"
+    type          = "scsi"
+    storage       = var.storage_pool
+    iothread      = 1
   }
   
-  // Network in bridge mode
+  # VM network
   network {
-    name   = "eth0"
-    bridge = var.network_bridge
-    ip     = "${var.ip_address}/24"
-    gw     = var.gateway_ip
-  }
-
-  // DNS configuration
-  nameserver = var.nameserver
-  searchdomain = "basile.local"
-  
-  // Enable FUSE for container
-  features {
-    fuse = true
-  }
-
-  // Install and configure SSH on startup
-  startup = "apt-get update && apt-get install -y openssh-server && echo 'PermitRootLogin yes' >> /etc/ssh/sshd_config && systemctl restart ssh"
-
-  // Wait for SSH to become available
-  provisioner "remote-exec" {
-    inline = ["echo 'SSH is up and running!'"]
-    
-    connection {
-      type     = "ssh"
-      user     = "root"
-      password = var.root_password
-      host     = var.ip_address
-      // Add a timeout to give the container time to setup SSH
-      timeout  = "2m"
-    }
+    model         = "virtio"
+    bridge        = var.network_bridge
+    tag           = -1
   }
   
-  // Provisioning: Copy and execute scripts in order
+  # This would only work with cloud-init enabled images
+  ipconfig0       = "ip=${var.ip_address}/24,gw=${var.gateway_ip}"
+  nameserver      = var.nameserver
+  
+  # Enable QEMU guest agent
+  agent           = 1
+  
+  # Start on boot
+  onboot          = true
+}
+
+# Example of user_data for cloud-init (if needed)
+resource "local_file" "cloud_init_user_data" {
+  content  = templatefile("${path.module}/templates/user_data.yml.tpl", {
+    hostname      = "gitlab.basile.local"
+    ssh_public_key = var.ssh_public_key
+    root_password = var.root_password
+  })
+  filename = "${path.module}/files/user_data.yml"
+}
+
+# Wait for VM to be ready for SSH connection
+resource "null_resource" "wait_for_vm" {
+  depends_on = [proxmox_vm_qemu.gitlab]
+  
+  provisioner "local-exec" {
+    command = <<EOT
+      echo "Waiting for VM to become available..."
   provisioner "file" {
     source      = "${path.module}/scripts/setup.sh"
     destination = "/tmp/setup.sh"

@@ -26,10 +26,21 @@ variable "proxmox_node" {
   type        = string
 }
 
+variable "proxmox_host" {
+  description = "The hostname or IP address of the Proxmox host"
+  type        = string
+}
+
 variable "debian_template" {
   description = "The Debian template to use"
   type        = string
   default     = "debian-12-standard_12.7-1_amd64.tar.zst"
+}
+
+variable "debian_iso" {
+  description = "The Debian ISO to use for VM installation"
+  type        = string
+  default     = "debian-netinst-12.iso"
 }
 
 variable "root_password" {
@@ -64,4 +75,16 @@ variable "nameserver" {
   description = "DNS nameserver"
   type        = string
   default     = "1.1.1.1"
+}
+
+variable "vm_id" {
+  description = "VM ID for the GitLab VM"
+  type        = number
+  default     = 100
+}
+
+variable "ssh_public_key" {
+  description = "SSH public key to authorize for the default user"
+  type        = string
+  default     = ""
 }
