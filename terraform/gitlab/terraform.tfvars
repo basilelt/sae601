@@ -1,10 +1,10 @@
 proxmox_api_url = "https://proxmox.basile.local:8006/api2/json"
 proxmox_api_token_id = "terraform@pam!terraform-token"
-proxmox_api_token_secret = "e42f6359-3ceb-412b-b4ad-7b41c617b565"
+proxmox_api_token_secret = "5d1fac3a-61ee-4522-a345-84fd4909b29d"
 proxmox_tls_insecure = true
 proxmox_node = "pve"
 debian_template = "debian-12-standard_12.7-1_amd64.tar.zst"
-root_password = "toto"
+root_password = "totototo"
 storage_pool = "local-lvm"
 network_bridge = "vmbr0"
 ip_address = "192.168.2.11"

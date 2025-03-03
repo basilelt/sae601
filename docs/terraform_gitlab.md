@@ -28,24 +28,16 @@ cp terraform.tfvars.example terraform.tfvars
 terraform init
 ```
 
-2. Deploy the container:
+2. Deploy the container and install GitLab:
 
 ```bash
 terraform apply
 ```
 
-3. After the container is provisioned, copy and run the installation script:
-
-```bash
-# Copy the script to the container
-scp scripts/install_gitlab.sh root@<container_ip>:/tmp/
-
-# SSH into the container
-ssh root@<container_ip>
-
-# Run the installation script
-bash /tmp/install_gitlab.sh
-```
+The deployment process automatically:
+- Provisions the LXC container
+- Runs the setup script that installs the auto-update utility
+- Installs and configures GitLab CE
 
 ## Post-Installation
 
@@ -59,9 +51,10 @@ bash /tmp/install_gitlab.sh
 
 ## Notes
 
-- The container requires direct internet access to download GitLab packages
+- The container requires direct internet access to download packages
 - The configuration follows the requirements in `docs/gitlab.md`
 - SSL is configured with a self-signed certificate
+- The auto-update utility is installed to keep the system updated automatically
 - Docker and GitLab runner are not installed with this Terraform configuration
 
 ## Resource Specifications
