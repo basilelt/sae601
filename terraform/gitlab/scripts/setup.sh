@@ -1,40 +1,36 @@
 #!/bin/bash
 
-# Script to clone and install auto-update
-# https://github.com/noloader/auto-update
+# Basic system setup script
 
 set -e  # Exit on error
 
-# Disable swap as GitLab recommends
-echo "Disabling swap..."
-swapoff -a
-sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
-echo "Swap has been disabled."
+echo "Setting up basic system configuration..."
 
-echo "Setting up auto-update script..."
+# Update system packages
+apt-get update
+apt-get upgrade -y
 
-# Install git if not already installed
-if ! command -v git &> /dev/null; then
-    echo "Installing git..."
-    apt-get update
-    apt-get install -y git
-fi
+# Install common tools
+apt-get install -y \
+    sudo \
+    vim \
+    curl \
+    wget \
+    unzip \
+    htop \
+    net-tools \
+    apt-transport-https \
+    ca-certificates
 
-# Create a temporary directory
-TEMP_DIR=$(mktemp -d)
-cd "$TEMP_DIR"
+# Setup automatic updates for security patches
+apt-get install -y unattended-upgrades apt-listchanges
+cat > /etc/apt/apt.conf.d/20auto-upgrades << EOF
+APT::Periodic::Update-Package-Lists "1";
+APT::Periodic::Unattended-Upgrade "1";
+APT::Periodic::AutocleanInterval "7";
+EOF
 
-# Clone the repository
-echo "Cloning auto-update repository..."
-git clone https://github.com/noloader/auto-update.git
-cd auto-update
+# Configure timezone
+timedatectl set-timezone Europe/Paris
 
-# Install the script as root
-./install.sh
-
-# Clean up
-cd /
-rm -rf "$TEMP_DIR"
-
-echo "auto-update has been installed successfully!"
-echo "It will run daily via systemd to keep the system updated."
+echo "Basic system setup complete!"
