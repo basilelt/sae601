@@ -66,5 +66,5 @@ variable "template_vm_id" {
 variable "gitlab_vm_id" {
   description = "ID to assign to the GitLab VM"
   type        = number
-  default     = null  # If not provided, Proxmox will auto-assign an ID
+  default     = null
 }
