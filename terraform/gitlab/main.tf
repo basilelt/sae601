@@ -23,70 +23,74 @@ provider "proxmox" {
   }
 }
 
-resource "proxmox_lxc" "gitlab" {
+resource "proxmox_vm_qemu" "gitlab" {
   target_node     = var.proxmox_node
-  hostname        = "gitlab.basile.local"
-  ostemplate      = "local:vztmpl/${var.debian_template}"
-  password        = var.root_password
-  unprivileged    = true
-  start           = true
-  onboot          = true
+  name            = "gitlab"
+  desc            = "GitLab server VM"
   
-  // Resource allocation as per prerequisites in terraform_gitlab.md
-  cores  = 6
-  memory = 8192
-  swap   = 0
+  # Clone from template (replace TEMPLATE_ID with your template ID or name)
+  clone           = var.template_name
+  full_clone      = true
   
-  // Storage allocation - 32G as specified in docs
-  rootfs {
-    storage = var.storage_pool
-    size    = "32G"
+  # VM specific settings
+  qemu_os         = "l26" # Linux 2.6+ kernel
+  scsihw          = "virtio-scsi-pci"
+  boot            = "cdn"  # First CD-ROM, then disk, then network
+  bootdisk        = "scsi0"
+  
+  # Resource allocation as per GitLab requirements
+  cores           = 6
+  sockets         = 1
+  cpu             = "host"
+  memory          = 8192
+  
+  # Disk configuration
+  # When using a template, the disk is already created
+  # You can resize it if needed:
+  disk {
+    type          = "scsi"
+    storage       = var.storage_pool
+    size          = "32G"
+    discard       = "on"
   }
   
-  // Network in bridge mode
+  # Network configuration
   network {
-    name   = "eth0"
-    bridge = var.network_bridge
-    ip     = "${var.ip_address}/24"
-    gw     = var.gateway_ip
+    model         = "virtio"
+    bridge        = var.network_bridge
   }
-
-  // DNS configuration
-  nameserver = var.nameserver
-  searchdomain = "basile.local"
   
-  // Enable FUSE for container
-  features {
-    fuse = true
-  }
+  # Cloud-init configuration
+  ipconfig0       = "ip=${var.ip_address}/24,gw=${var.gateway_ip}"
+  nameserver      = var.nameserver
+  searchdomain    = "basile.local"
+  
+  # SSH keys for cloud-init
+  sshkeys = var.ssh_public_keys
 
-  // Install and configure SSH on startup
-  startup = "apt-get update && apt-get install -y openssh-server && echo 'PermitRootLogin yes' >> /etc/ssh/sshd_config && systemctl restart ssh"
-
-  // Wait for SSH to become available
+  # Wait for the VM to get an IP address before proceeding
   provisioner "remote-exec" {
-    inline = ["echo 'SSH is up and running!'"]
+    inline = ["echo 'VM is up and running!'"]
     
     connection {
-      type     = "ssh"
-      user     = "root"
-      password = var.root_password
-      host     = var.ip_address
-      // Add a timeout to give the container time to setup SSH
-      timeout  = "2m"
+      type        = "ssh"
+      user        = "root"  # or appropriate user from cloud-init
+      host        = var.ip_address
+      private_key = file(var.ssh_private_key_path)
+      timeout     = "5m"
     }
   }
   
-  // Provisioning: Copy and execute scripts in order
+  # Copy setup scripts
   provisioner "file" {
     source      = "${path.module}/scripts/setup.sh"
     destination = "/tmp/setup.sh"
     
     connection {
-      type     = "ssh"
-      user     = "root"
-      password = var.root_password
-      host     = var.ip_address
+      type        = "ssh"
+      user        = "root"
+      host        = var.ip_address
+      private_key = file(var.ssh_private_key_path)
     }
   }
   
@@ -95,13 +99,14 @@ resource "proxmox_lxc" "gitlab" {
     destination = "/tmp/install_gitlab.sh"
     
     connection {
-      type     = "ssh"
-      user     = "root"
-      password = var.root_password
-      host     = var.ip_address
+      type        = "ssh"
+      user        = "root"
+      host        = var.ip_address
+      private_key = file(var.ssh_private_key_path)
     }
   }
   
+  # Execute setup scripts
   provisioner "remote-exec" {
     inline = [
       "chmod +x /tmp/setup.sh",
@@ -113,10 +118,10 @@ resource "proxmox_lxc" "gitlab" {
     ]
     
     connection {
-      type     = "ssh"
-      user     = "root"
-      password = var.root_password
-      host     = var.ip_address
+      type        = "ssh"
+      user        = "root"
+      host        = var.ip_address
+      private_key = file(var.ssh_private_key_path)
     }
   }
 }

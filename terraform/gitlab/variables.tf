@@ -26,16 +26,15 @@ variable "proxmox_node" {
   type        = string
 }
 
-variable "debian_template" {
-  description = "The Debian template to use"
-  type        = string
-  default     = "debian-12-standard_12.7-1_amd64.tar.zst"
-}
-
-variable "root_password" {
-  description = "Root password for the container"
+variable "ssh_public_keys" {
+  description = "SSH public keys to add to the VM via cloud-init"
   type        = string
   sensitive   = true
+}
+
+variable "ssh_private_key_path" {
+  description = "Path to SSH private key for VM connection"
+  type        = string
 }
 
 variable "storage_pool" {
@@ -64,4 +63,9 @@ variable "nameserver" {
   description = "DNS nameserver"
   type        = string
   default     = "1.1.1.1"
+}
+
+variable "template_name" {
+  description = "Name or ID of the Proxmox VM template to clone from"
+  type        = string
 }

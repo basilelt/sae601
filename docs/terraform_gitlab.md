@@ -25,13 +25,15 @@ cp terraform.tfvars.example terraform.tfvars
 1. Initialize Terraform:
 
 ```bash
-terraform init
+terraform init -reconfigure
+terraform validate
+terraform plan -out=plan.out
 ```
 
 2. Deploy the container and install GitLab:
 
 ```bash
-terraform apply
+terraform apply plan.out
 ```
 
 The deployment process automatically:
