@@ -7,3 +7,5 @@
 *.tfvars
 *.tfplan
 *.tfout
+*.out
+*.hcl

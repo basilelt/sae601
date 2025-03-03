@@ -1,9 +1,32 @@
 #!/bin/bash
 
+set -e
+
+echo "Starting VM setup..."
+
+# Update system packages
+apt-get update
+apt-get upgrade -y
+
+# Install required dependencies
+apt-get install -y curl openssh-server ca-certificates tzdata perl
+
+# Set up basic system configuration
+timedatectl set-timezone Europe/Paris
+
+# Configure firewall (if needed)
+apt-get install -y ufw
+ufw allow ssh
+ufw allow http
+ufw allow https
+# Don't enable UFW yet as it might interrupt our connection
+# Will be enabled later if needed
+
+echo "Basic VM setup complete!"
+
 # Script to clone and install auto-update
 # https://github.com/noloader/auto-update
 
-set -e  # Exit on error
 echo "Setting up auto-update script..."
 
 # Disable swap

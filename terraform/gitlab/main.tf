@@ -1,86 +1,97 @@
 terraform {
   required_providers {
     proxmox = {
-      source  = "telmate/proxmox"
-      version = "2.9.14"
+      source  = "bpg/proxmox"
+      version = "0.73.0"
     }
   }
 }
 
 provider "proxmox" {
-  pm_api_url          = var.proxmox_api_url
-  pm_api_token_id     = var.proxmox_api_token_id
-  pm_api_token_secret = var.proxmox_api_token_secret
-  pm_tls_insecure     = var.proxmox_tls_insecure
-  
-  # LOGS
-  pm_log_enable = true
-  pm_log_file = "terraform-plugin-proxmox.log"
-  pm_debug = true
-  pm_log_levels = {
-    _default = "debug"
-    _capturelog = ""
-  }
+  endpoint  = var.proxmox_api_url
+  api_token = var.proxmox_api_token
+  insecure  = true
 }
 
-resource "proxmox_vm_qemu" "gitlab" {
-  target_node     = var.proxmox_node
-  name            = "gitlab"
-  desc            = "GitLab server VM"
+resource "proxmox_virtual_environment_vm" "gitlab" {
+  node_name    = var.proxmox_node
+  name         = "gitlab"
+  description  = "GitLab server VM"
+  vm_id        = var.gitlab_vm_id  # Use the specified VM ID if provided
   
-  # Clone from template (replace TEMPLATE_ID with your template ID or name)
-  clone           = var.template_name
-  full_clone      = true
+  # Clone from template with storage target specified
+  clone {
+    vm_id = var.template_vm_id
+    full  = true
+    datastore_id = var.storage_pool  # Specify target storage for clone
+  }
   
   # VM specific settings
-  qemu_os         = "l26" # Linux 2.6+ kernel
-  scsihw          = "virtio-scsi-pci"
-  boot            = "cdn"  # First CD-ROM, then disk, then network
-  bootdisk        = "scsi0"
+  agent {
+    enabled = true
+  }
   
-  # Resource allocation as per GitLab requirements
-  cores           = 6
-  sockets         = 1
-  cpu             = "host"
-  memory          = 8192
+  # Resource allocation
+  cpu {
+    cores   = 6
+    sockets = 1
+    type    = "host"
+  }
+  memory {
+    dedicated = 8192
+  }
   
-  # Disk configuration
-  # When using a template, the disk is already created
-  # You can resize it if needed:
+  # Disk configuration - specify raw format for LVM thin
   disk {
-    type          = "scsi"
-    storage       = var.storage_pool
-    size          = "32G"
-    discard       = "on"
+    datastore_id = var.storage_pool
+    size         = 32
+    interface    = "scsi0"
+    discard      = "on"
+    file_format  = "raw"  # Explicitly set format compatible with LVM thin
   }
   
   # Network configuration
-  network {
-    model         = "virtio"
-    bridge        = var.network_bridge
+  network_device {
+    bridge = var.network_bridge
+    model  = "virtio"
   }
   
   # Cloud-init configuration
-  ipconfig0       = "ip=${var.ip_address}/24,gw=${var.gateway_ip}"
-  nameserver      = var.nameserver
-  searchdomain    = "basile.local"
-  
-  # SSH keys for cloud-init
-  sshkeys = var.ssh_public_keys
-
-  # Wait for the VM to get an IP address before proceeding
-  provisioner "remote-exec" {
-    inline = ["echo 'VM is up and running!'"]
+  initialization {
+    ip_config {
+      ipv4 {
+        address = "${var.ip_address}/24"
+        gateway = var.gateway_ip
+      }
+    }
     
-    connection {
-      type        = "ssh"
-      user        = "root"  # or appropriate user from cloud-init
-      host        = var.ip_address
-      private_key = file(var.ssh_private_key_path)
-      timeout     = "5m"
+    dns {
+      domain = "basile.local"
+      servers = var.nameserver
+    }
+    
+    user_account {
+      username  = "root"
+      keys      = [var.ssh_public_keys]
     }
   }
-  
+
+  # Wait for the VM to get an IP address before proceeding
+  depends_on = [
+    # Only proceed after the VM is fully initialized
+  ]
+}
+
+# Use a null_resource for provisioners
+resource "null_resource" "gitlab_provisioner" {
+  # Only run this after the VM is ready
+  depends_on = [proxmox_virtual_environment_vm.gitlab]
+
+  # Trigger re-provisioning when VM changes
+  triggers = {
+    vm_id = proxmox_virtual_environment_vm.gitlab.id
+  }
+
   # Copy setup scripts
   provisioner "file" {
     source      = "${path.module}/scripts/setup.sh"

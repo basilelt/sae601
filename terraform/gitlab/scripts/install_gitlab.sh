@@ -42,6 +42,10 @@ openssl x509 -signkey /etc/gitlab/ssl/gitlab.basile.local.key -in /tmp/gitlab.ba
 echo "Installing GitLab CE repository..."
 curl -sS https://packages.gitlab.com/install/repositories/gitlab/gitlab-ce/script.deb.sh | bash
 
+# Set external URL - replace with actual domain if available
+GITLAB_DOMAIN="${GITLAB_DOMAIN:-localhost}"
+GITLAB_EXTERNAL_URL="http://$GITLAB_DOMAIN"
+
 echo "Installing GitLab CE package with HTTP configuration..."
 EXTERNAL_URL="http://gitlab.basile.local" apt-get install -y gitlab-ce
 
@@ -62,6 +66,11 @@ EOF
 # 6. Reconfigure GitLab
 echo "Reconfiguring GitLab with new settings..."
 gitlab-ctl reconfigure
+
+# 7. Install Docker
+echo "Installing Docker..."
+curl -fsSL https://get.docker.com -o get-docker.sh
+sh get-docker.sh
 
 echo "================================================================"
 echo "GitLab installation complete!"
