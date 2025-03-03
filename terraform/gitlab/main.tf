@@ -60,6 +60,7 @@ resource "proxmox_vm_qemu" "gitlab" {
   # Start on boot
   onboot          = true
   
+  # Lifecycle block
   lifecycle {
     create_before_destroy = true
   }

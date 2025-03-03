@@ -13,22 +13,17 @@ This Terraform project deploys GitLab CE on a Debian 12 virtual machine running 
 ## Setup
 
 1. Clone this repository
-2. Copy `terraform.tfvars.example` to `terraform.tfvars` and fill in your specific values:
-
-```bash
-cp terraform.tfvars.example terraform.tfvars
-```
-
-3. Edit `terraform.tfvars` to match your environment
-4. Make sure your `/etc/hosts` file is configured with the correct entries (see [hosts configuration](hosts_configuration.md))
+2. Edit `terraform.tfvars` to match your environment
+3. Make sure your `/etc/hosts` file is configured with the correct entries (see [hosts configuration](hosts_configuration.md))
 
 ## Deployment
 
-1. Run the deployment script:
+1. Run the deployment:
 
 ```bash
-./setup_directories.sh
-./deploy.sh
+terraform init --upgrade
+terraform plan -out=gitlab.tfplan
+terraform apply gitlab.tfplan
 ```
 
 The deployment process automatically:

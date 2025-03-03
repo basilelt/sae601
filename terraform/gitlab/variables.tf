@@ -78,9 +78,9 @@ variable "nameserver" {
 }
 
 variable "vm_id" {
-  description = "VM ID for the GitLab VM"
+  description = "VM ID for the GitLab VM (must not already exist in Proxmox)"
   type        = number
-  default     = 100
+  default     = 110
 }
 
 variable "ssh_public_key" {
