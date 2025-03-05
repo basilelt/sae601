@@ -17,13 +17,13 @@ resource "proxmox_virtual_environment_vm" "gitlab" {
   node_name    = var.proxmox_node
   name         = "gitlab"
   description  = "GitLab server VM"
-  vm_id        = var.gitlab_vm_id  # Use the specified VM ID if provided
+  vm_id        = var.gitlab_vm_id
   
   # Clone from template with storage target specified
   clone {
     vm_id = var.template_vm_id
     full  = true
-    datastore_id = var.storage_pool  # Specify target storage for clone
+    datastore_id = var.storage_pool
   }
   
   # VM specific settings
@@ -41,13 +41,13 @@ resource "proxmox_virtual_environment_vm" "gitlab" {
     dedicated = 8192
   }
   
-  # Disk configuration - specify raw format for LVM thin
+  # Disk configuration
   disk {
     datastore_id = var.storage_pool
     size         = 32
     interface    = "scsi0"
     discard      = "on"
-    file_format  = "raw"  # Explicitly set format compatible with LVM thin
+    file_format  = "raw"
   }
   
   # Network configuration
@@ -71,26 +71,50 @@ resource "proxmox_virtual_environment_vm" "gitlab" {
     }
     
     user_account {
-      username  = "root"
-      keys      = [var.ssh_public_keys]
+      username = "root"
+      keys     = [var.ssh_public_keys]
     }
+    
+    # Cloud-init settings as part of the standard configuration
+    # Remove the user_data attribute and instead use these settings:
+    datastore_id = var.storage_pool
+    interface    = "ide2"
   }
 
-  # Wait for the VM to get an IP address before proceeding
-  depends_on = [
-    # Only proceed after the VM is fully initialized
-  ]
+  operating_system {
+    type = "l26"
+  }
+
+  # Add cloud-init custom settings outside initialization block
+  lifecycle {
+    ignore_changes = [
+      initialization[0].datastore_id,
+    ]
+  }
 }
 
-# Use a null_resource for provisioners
-resource "null_resource" "gitlab_provisioner" {
-  # Only run this after the VM is ready
+# Use local-exec instead of remote-exec initially to wait for VM to be accessible
+resource "null_resource" "wait_for_vm" {
   depends_on = [proxmox_virtual_environment_vm.gitlab]
 
-  # Trigger re-provisioning when VM changes
-  triggers = {
-    vm_id = proxmox_virtual_environment_vm.gitlab.id
+  provisioner "local-exec" {
+    command = <<-EOT
+      echo "Waiting for VM to become accessible..."
+      count=0
+      max_attempts=30
+      until ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i ${var.ssh_private_key_path} root@${var.ip_address} echo "VM is accessible" || [ $count -eq $max_attempts ]
+      do
+        sleep 10
+        count=$((count+1))
+        echo "Attempt $count/$max_attempts: Waiting for VM to be accessible..."
+      done
+    EOT
   }
+}
+
+# Use a separate null_resource for provisioners after we know the VM is accessible
+resource "null_resource" "gitlab_provisioner" {
+  depends_on = [null_resource.wait_for_vm]
 
   # Copy setup scripts
   provisioner "file" {

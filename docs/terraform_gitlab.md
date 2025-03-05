@@ -1,11 +1,11 @@
 # GitLab on Proxmox Terraform Project
 
-This Terraform project deploys GitLab CE on a Debian 12 LXC container running on Proxmox.
+This Terraform project deploys GitLab CE on a Ubuntu 24.04 LXC container running on Proxmox.
 
 ## Prerequisites
 
 - Proxmox server running at proxmox.basile.local
-- The Debian 12 template (`debian-12-standard_12.7-1_amd64.tar.zst`) available on your Proxmox host
+- The Ubuntu 24.04 template (`ubuntu-12-standard_12.7-1_amd64.tar.zst`) available on your Proxmox host
 - Terraform installed on your local machine
 - API token for Proxmox with appropriate permissions
 

@@ -68,3 +68,9 @@ variable "gitlab_vm_id" {
   type        = number
   default     = null
 }
+
+variable "cloud_init_snippets_storage" {
+  description = "Storage location for cloud-init snippets"
+  type        = string
+  default     = "local"
+}
