@@ -9,25 +9,45 @@ apt-get update
 apt-get upgrade -y
 
 # Install required dependencies
-apt-get install -y curl openssh-server ca-certificates tzdata perl
+apt-get install -y curl ca-certificates tzdata perl
 
 # Set up basic system configuration
 timedatectl set-timezone Europe/Paris
+
+# Set keyboard layout to Swiss French
+echo "Setting keyboard layout to Swiss French..."
+apt-get install -y console-setup
+cat > /etc/default/keyboard << EOF
+XKBMODEL="pc105"
+XKBLAYOUT="ch"
+XKBVARIANT="fr"
+XKBOPTIONS=""
+BACKSPACE="guess"
+EOF
+dpkg-reconfigure -f noninteractive keyboard-configuration
+setupcon
 
 # Configure firewall (if needed)
 apt-get install -y ufw
 ufw allow ssh
 ufw allow http
 ufw allow https
-# Don't enable UFW yet as it might interrupt our connection
 # Will be enabled later if needed
 
 echo "Basic VM setup complete!"
 
 # Script to clone and install auto-update
-# https://github.com/noloader/auto-update
-
-echo "Setting up auto-update script..."
+# Create a temporary directory
+TEMP_DIR=$(mktemp -d)
+cd "$TEMP_DIR"
+# Clone the repository
+echo "Cloning auto-update repository..."
+git clone https://github.com/noloader/auto-update.git
+cd auto-update
+# Install the script as root
+./install.sh
+# Clean up
+cd / && rm -rf "$TEMP_DIR"
 
 # Disable swap
 echo "Disabling swap..."

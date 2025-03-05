@@ -9,3 +9,4 @@
 *.tfout
 *.out
 *.hcl
+*.lock.info

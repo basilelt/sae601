@@ -72,6 +72,7 @@ resource "proxmox_virtual_environment_vm" "gitlab" {
     
     user_account {
       username = "root"
+      password = "root"
       keys     = [var.ssh_public_keys]
     }
     
