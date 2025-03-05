@@ -16,8 +16,8 @@ provider "proxmox" {
 resource "proxmox_virtual_environment_vm" "kubernetes_nodes" {
   count        = length(var.ip_address_range)
   node_name    = var.proxmox_node
-  name         = "k8s-node-${count.index + 1}"
-  description  = "Kubernetes node ${count.index + 1}"
+  name         = "kube-master${count.index + 1}"
+  description  = "Kubernetes master ${count.index + 1}"
   vm_id        = var.gitlab_vm_id_range[count.index]
   
   # Clone from template with storage target specified
