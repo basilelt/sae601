@@ -58,12 +58,19 @@ sed -i '/\bswap\b/d' /etc/fstab
 # Add entries to /etc/hosts
 echo "Adding host entries to /etc/hosts..."
 cat << EOF >> /etc/hosts
-192.168.2.10       proxmox.basile.local
-192.168.2.11       gitlab.basile.local
-192.168.2.12       master1.basile.local
-192.168.2.13       master2.basile.local
-192.168.2.14       master3.basile.local
+10.30.1.10 proxmox.basile.local
+10.30.1.12 master1.basile.local
+10.30.1.13 master2.basile.local
+10.30.1.14 master3.basile.local
 EOF
+
+echo "Configuring cloud-init to preserve /etc/hosts entries..."
+# Disable manage_etc_hosts in cloud.cfg
+if grep -q "manage_etc_hosts" /etc/cloud/cloud.cfg; then
+    sed -i 's/manage_etc_hosts: true/manage_etc_hosts: false/' /etc/cloud/cloud.cfg
+else
+    echo "manage_etc_hosts: false" >> /etc/cloud/cloud.cfg
+fi
 
 # Install git if not already installed
 if ! command -v git &> /dev/null; then
