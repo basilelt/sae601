@@ -4,7 +4,6 @@
 .terraform
 *.tfstate
 *.tfstate.backup
-*.tfvars
 *.tfplan
 *.tfout
 *.out

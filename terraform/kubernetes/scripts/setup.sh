@@ -30,8 +30,6 @@ setupcon
 # Configure firewall (if needed)
 apt-get install -y ufw
 ufw allow ssh
-ufw allow http
-ufw allow https
 # Will be enabled later if needed
 
 echo "Basic VM setup complete!"
@@ -64,13 +62,6 @@ cat << EOF >> /etc/hosts
 192.168.2.13       master2.basile.local
 192.168.2.14       master3.basile.local
 EOF
-
-# Install git if not already installed
-if ! command -v git &> /dev/null; then
-    echo "Installing git..."
-    apt-get update
-    apt-get install -y git
-fi
 
 echo "auto-update has been installed successfully!"
 echo "It will run daily via systemd to keep the system updated."
