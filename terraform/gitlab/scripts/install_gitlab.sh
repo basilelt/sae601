@@ -38,6 +38,10 @@ openssl genpkey -out /etc/gitlab/ssl/gitlab.basile.local.key -algorithm RSA -pke
 openssl req -new -key /etc/gitlab/ssl/gitlab.basile.local.key -out /tmp/gitlab.basile.local.csr -config /tmp/gitlab.basile.local.cnf
 openssl x509 -signkey /etc/gitlab/ssl/gitlab.basile.local.key -in /tmp/gitlab.basile.local.csr -req -copy_extensions copyall -days 365 -out /etc/gitlab/ssl/gitlab.basile.local.crt
 
+echo "Installing certificate on Debian/Ubuntu system..."
+cp /etc/gitlab/ssl/gitlab.basile.local.crt /usr/local/share/ca-certificates/gitlab.basile.local.crt
+update-ca-certificates
+
 # 4. Install GitLab CE package
 echo "Installing GitLab CE repository..."
 curl -sS https://packages.gitlab.com/install/repositories/gitlab/gitlab-ce/script.deb.sh | bash
