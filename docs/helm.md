@@ -17,6 +17,8 @@ helm repo add gitlab https://charts.gitlab.io
 
 # For initial installation
 ```bash
+cat k8s/gitlab.basile.local.crt | base64 -w 0  # Copy the output in k8s/cert-config.yml
+kubectl apply -f k8s/cert-secret.yml
 helm install --namespace gitlab-runner gitlab-runner -f k8s/values.yaml gitlab/gitlab-runner
 ```
 
@@ -38,4 +40,5 @@ kubectl logs -n gitlab-runner -l app=gitlab-runner -f
 # To delete if needed
 ```bash
 helm uninstall gitlab-runner -n gitlab-runner
+kubectl delete configmap <my-config> -n gitlab-runner
 ```
