@@ -1,0 +1,60 @@
+# GitLab Runner Helm Chart values.yaml
+
+## The GitLab Server URL (with http/https) and Registration Token
+gitlabUrl: https://gitlab.basile.local/
+runnerToken: "glrt-t1_aFmzZiW6P-uvMERhPjKU"
+
+## Runner configuration
+runners:
+  config: |
+    [[runners]]
+      tls_verify = false
+      [runners.kubernetes]
+        namespace = "{{.Release.Namespace}}"
+        image = "alpine:3.21"
+  tags: "kubernetes,cluster"
+  runUntagged: true
+  protected: false
+  executor: kubernetes
+  
+  # Kubernetes executor specific configuration
+  kubernetes:
+    image: alpine:3.21
+    namespace: "gitlab-runner"
+    privileged: true
+    serviceAccount: gitlab-runner
+    resources:
+      requests:
+        cpu: "300m"
+        memory: "300Mi"
+      limits:
+        cpu: "500m"
+        memory: "500Mi"
+
+# Registration command args
+runnerRegistrationCommandArgs: ["--token", "glrt-t1_aFmzZiW6P-uvMERhPjKU", "--url", "https://gitlab.basile.local/", "--tls-skip-verify"]
+concurrent: 6
+checkInterval: 30
+
+# Persistent storage for cache
+persistence:
+  enabled: true
+  storageClass: ""
+  accessMode: ReadWriteOnce
+  size: 10Gi
+
+certsSecretName: null
+
+rbac:
+  create: true
+  rules: []
+  clusterWideAccess: false
+
+serviceAccount:
+  create: true
+  name: gitlab-runner
+  annotations: {}
+
+podSecurityContext:
+  runAsUser: 100
+  fsGroup: 65533

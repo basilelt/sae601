@@ -1,0 +1,1 @@
+ansible-playbook cluster.yml -b -v

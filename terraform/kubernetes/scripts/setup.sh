@@ -30,8 +30,6 @@ setupcon
 # Configure firewall (if needed)
 apt-get install -y ufw
 ufw allow ssh
-ufw allow http
-ufw allow https
 # Will be enabled later if needed
 
 echo "Basic VM setup complete!"
@@ -59,6 +57,7 @@ sed -i '/\bswap\b/d' /etc/fstab
 echo "Adding host entries to /etc/hosts..."
 cat << EOF >> /etc/hosts
 10.30.1.10 proxmox.basile.local
+10.30.1.11 gitlab.basile.local
 10.30.1.12 master1.basile.local
 10.30.1.13 master2.basile.local
 10.30.1.14 master3.basile.local
@@ -70,13 +69,6 @@ if grep -q "manage_etc_hosts" /etc/cloud/cloud.cfg; then
     sed -i 's/manage_etc_hosts: true/manage_etc_hosts: false/' /etc/cloud/cloud.cfg
 else
     echo "manage_etc_hosts: false" >> /etc/cloud/cloud.cfg
-fi
-
-# Install git if not already installed
-if ! command -v git &> /dev/null; then
-    echo "Installing git..."
-    apt-get update
-    apt-get install -y git
 fi
 
 echo "auto-update has been installed successfully!"
