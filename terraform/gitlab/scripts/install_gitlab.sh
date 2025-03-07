@@ -198,11 +198,11 @@ network:
         addresses: [127.0.0.1]
         search: [basile.local]
 EOF
+chmod 600 /etc/netplan/99-custom-dns.yaml
 # Apply netplan configuration
 netplan apply
 # Verify DNS configuration
 echo "Verifying DNS configuration..."
-systemd-resolve --status | grep "DNS Server"
 nslookup gitlab.basile.local
 nslookup master1.basile.local
 
