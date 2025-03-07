@@ -169,10 +169,10 @@ cat > /etc/bind/zones/db.10.30 << EOF
 @       IN      NS      ns1.basile.local.
 
 ; PTR Records
+11      IN      PTR     gitlab.basile.local.
 12      IN      PTR     master1.basile.local.
 13      IN      PTR     master2.basile.local.
 14      IN      PTR     master3.basile.local.
-$(echo $CONTAINER_IP | cut -d. -f4)      IN      PTR     gitlab.basile.local.
 EOF
 # Validate configuration
 named-checkconf
