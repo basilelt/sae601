@@ -17,14 +17,14 @@ helm repo add gitlab https://charts.gitlab.io
 
 # For initial installation
 ```bash
-cat k8s/gitlab.basile.local.crt | base64 -w 0  # Copy the output in k8s/cert-config.yml
-kubectl apply -f k8s/cert-secret.yml
-helm install --namespace gitlab-runner gitlab-runner -f k8s/values.yaml gitlab/gitlab-runner
+cat k8s/runner/gitlab.basile.local.crt | base64 -w 0  # Copy the output in k8s/runner/cert-config.yml
+kubectl apply -f k8s/runner/cert-secret.yml
+helm install --namespace gitlab-runner gitlab-runner -f k8s/runner/values.yaml gitlab/gitlab-runner
 ```
 
 # If runner is already installed, upgrade it with the new configuration
 ```bash
-helm upgrade --namespace gitlab-runner gitlab-runner -f k8s/values.yaml gitlab/gitlab-runner
+helm upgrade --namespace gitlab-runner gitlab-runner -f k8s/runner/runner/values.yaml gitlab/gitlab-runner
 ```
 
 # To check the status of your runner pods

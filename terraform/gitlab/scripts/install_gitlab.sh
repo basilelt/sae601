@@ -138,10 +138,15 @@ cat > /etc/bind/zones/db.basile.local << EOF
 @       IN      NS      ns1.basile.local.
 ns1     IN      A       10.30.1.11
 
-; Top domain round-robin to all masters
-@       IN      A       10.30.1.12
-@       IN      A       10.30.1.13
-@       IN      A       10.30.1.14
+; Specific entry for cluster.basile.local
+cluster IN      A       10.30.1.12
+cluster IN      A       10.30.1.13
+cluster IN      A       10.30.1.14
+
+; Wildcard for cluster subdomain pointing to all masters
+*.cluster IN      A       10.30.1.12
+*.cluster IN      A       10.30.1.13
+*.cluster IN      A       10.30.1.14
 
 ; Kubernetes masters
 master1 IN      A       10.30.1.12
