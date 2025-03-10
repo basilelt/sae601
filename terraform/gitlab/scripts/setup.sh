@@ -65,4 +65,3 @@ fi
 echo "auto-update has been installed successfully!"
 echo "It will run daily via systemd to keep the system updated."
 echo "Swap has been disabled permanently."
-echo "Host entries have been added to /etc/hosts."

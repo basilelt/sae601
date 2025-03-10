@@ -16,9 +16,7 @@ Table des matières :
   - [Https](#https)
   - [Registry](#registry)
   - [Docker](#docker)
-  - [Runner](#runner)
     - [Etape 4](#etape-4)
-      - [Register](#register)
   - [Ssh](#ssh)
 
 # Schema
@@ -167,12 +165,6 @@ Ajouter votre utilisateur au groupe docker, cela vous permettra d'utiliser la co
 docker login gitlab.basile.local:5050
 ```
 
-## Runner
-
-Insaller le service gitlab-runner en suivant la [procédure d'installation](https://docs.gitlab.com/runner/install/linux-repository.html#install-gitlab-runner) étapes 1 et 2.
-
-:check_mark_button: le service gitlab-runner doit être dans l'état running
-
 ### Etape 4
 
 Avant de réaliser l'enregistrement du runner auprès de votre instance gitlab, copier le certificat auto signé de votre instance vers le dossier de configuration du service gitlab-runner.
@@ -188,22 +180,6 @@ Créer un runner au niveau de votre instance gitlab en suivant la [procédure d'
 - name : ```runner```
 - executor : ```docker```
 - default docker image : ```alpine:latest```
-
-#### Register
-
-A l'étape d'enregistrement du runner, ajouter 2 options à la commande **gitlab-runner register**
-
-1. --docker-extra-hosts
-Cette résolution entre le nom et l'adresse IP de votre instance gitlab, sera alors automatiquement ajoutée à chaque container exécuté.
-
-2. --docker-network-mode
-Cette option connectera automatiquement chaque container au réseau de votre host
-
-```bash
-gitlab-runner register --url https://gitlab.basile.local --token glrt-************-runner --docker-extra-hosts ["gitlab.basile.local:<address ip>"] --docker-network-mode host
-```
-
-:check_mark_button: Votre runner doit apparaitre online sous la section admin > CI/CD > Runners
 
 ## Ssh
 
