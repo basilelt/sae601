@@ -39,7 +39,7 @@ resource "proxmox_virtual_environment_vm" "kubernetes_nodes" {
     type    = "host"
   }
   memory {
-    dedicated = 1536
+    dedicated = 1664
   }
   
   # Disk configuration
