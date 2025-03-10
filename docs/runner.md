@@ -40,5 +40,5 @@ kubectl logs -n gitlab-runner -l app=gitlab-runner -f
 # To delete if needed
 ```bash
 helm uninstall gitlab-runner -n gitlab-runner
-kubectl delete configmap <my-config> -n gitlab-runner
+kubectl delete configmap gitlab-runner-certs -n gitlab-runner
 ```
