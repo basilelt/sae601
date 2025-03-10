@@ -12,3 +12,4 @@
 *.crt
 cert-secret.yml
 .ansible
+.vscode
