@@ -101,11 +101,11 @@ options {
 
     allow-query {
         localhost;
-        10.30.0.0/16;
+        10.0.0.0/8;
     };
 
     recursion yes;
-    dnssec-validation auto;
+    dnssec-validation no;
     listen-on { any; };
     listen-on-v6 { any; };
 };
