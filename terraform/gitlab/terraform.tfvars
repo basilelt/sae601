@@ -9,5 +9,5 @@ ssh_private_key_path = "~/.ssh/id_rsa_sae"
 network_bridge = "vmbr0"
 ip_address = "10.30.1.11"
 gateway_ip = "10.30.255.254"
-nameserver = ["8.8.8.8", "8.8.4.4"]
+nameserver = ["10.30.1.11", "10.30.255.254"]
 gitlab_vm_id = 110
