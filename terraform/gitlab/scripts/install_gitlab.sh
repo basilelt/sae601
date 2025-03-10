@@ -106,8 +106,7 @@ options {
 
     recursion yes;
     dnssec-validation no;
-    listen-on { any; };
-    listen-on-v6 { any; };
+    listen-on { 10.30.1.11; };
 };
 EOF
 
