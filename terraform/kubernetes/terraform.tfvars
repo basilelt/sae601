@@ -11,3 +11,5 @@ ip_address_range = ["10.30.1.12", "10.30.1.13", "10.30.1.14"]
 gateway_ip = "10.30.255.254"
 nameserver = ["10.30.1.11"]
 gitlab_vm_id_range = [120, 121, 122]
+root_password = "root"
+domain = "basile.local"

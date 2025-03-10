@@ -66,13 +66,13 @@ resource "proxmox_virtual_environment_vm" "gitlab" {
     }
     
     dns {
-      domain = "basile.local"
+      domain = var.domain
       servers = var.nameserver
     }
     
     user_account {
       username = "root"
-      password = "root"
+      password = var.root_password
       keys     = [var.ssh_public_keys]
     }
     

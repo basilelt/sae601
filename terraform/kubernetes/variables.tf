@@ -68,3 +68,13 @@ variable "gitlab_vm_id_range" {
   type        = list
 }
 
+variable "root_password" {
+  description = "Root password for the VM"
+  type        = string
+  sensitive   = true
+}
+
+variable "domain" {
+  description = "Domain name"
+  type        = string
+}

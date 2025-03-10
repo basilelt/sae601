@@ -52,6 +52,11 @@ variable "gateway_ip" {
   type        = string
 }
 
+variable "domain" {
+  description = "Domain name"
+  type        = string
+}
+
 variable "nameserver" {
   description = "DNS server addresses"
   type        = list(string)
@@ -69,3 +74,8 @@ variable "gitlab_vm_id" {
   default     = null
 }
 
+variable "root_password" {
+  description = "Root password for the VM"
+  type        = string
+  sensitive   = true
+}
