@@ -2,7 +2,7 @@
 
 ## The GitLab Server URL (with http/https) and Registration Token
 gitlabUrl: https://gitlab.basile.local/
-runnerToken: "glrt-t1_aFmzZiW6P-uvMERhPjKU"
+runnerToken: "your_token"
 
 ## Runner configuration
 runners:
@@ -12,13 +12,6 @@ runners:
       [runners.kubernetes]
         namespace = "{{.Release.Namespace}}"
         image = "alpine:3.21"
-        # Add host aliases for DNS mapping
-        # host_aliases = [
-        #   {
-        #     ip = "10.30.1.11"
-        #     hostnames = ["gitlab.basile.local"]
-        #   }
-        # ]
       [runners.custom_build_dir]
         enabled = false
   tags: "kubernetes,cluster"
@@ -41,7 +34,7 @@ runners:
         memory: "500Mi"
 
 # Registration command args
-runnerRegistrationCommandArgs: ["--token", "glrt-t1_aFmzZiW6P-uvMERhPjKU", "--url", "https://gitlab.basile.local/", "--tls-skip-verify"]
+runnerRegistrationCommandArgs: ["--token", "{{ .Values.runnerToken }}", "--url", "{{ .Values.gitlabUrl }}",  "--tls-skip-verify"]
 concurrent: 6
 checkInterval: 30
 
