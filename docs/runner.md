@@ -24,7 +24,7 @@ helm install --namespace gitlab-runner gitlab-runner -f k8s/runner/values.yaml g
 
 # If runner is already installed, upgrade it with the new configuration
 ```bash
-helm upgrade --namespace gitlab-runner gitlab-runner -f k8s/runner/runner/values.yaml gitlab/gitlab-runner
+helm upgrade --namespace gitlab-runner gitlab-runner -f k8s/runner/values.yaml gitlab/gitlab-runner
 ```
 
 # To check the status of your runner pods
