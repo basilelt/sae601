@@ -95,17 +95,13 @@ options {
     directory "/var/cache/bind";
     
     forwarders {
-        10.30.255.254
+        10.30.255.254;
     };
 
-    allow-query {
-        localhost;
-        10.30.0.0/16;
-        192.168.0.0/16;
-    };
+    allow-query { any; };
 
     recursion yes;
-    dnssec-validation auto;
+    dnssec-validation no;
     listen-on { any; };
 };
 EOF
