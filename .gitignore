@@ -14,3 +14,4 @@ cert-secret.yml
 .ansible
 .vscode
 values.yaml
+*.tfvars
