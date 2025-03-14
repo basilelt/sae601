@@ -16,7 +16,7 @@ mkdir -p /etc/gitlab/ssl
 
 # 3. Generate self-signed certificate
 echo "Generating self-signed certificate..."
-cat > /tmp/gitlab.basile.local.cnf << EOF
+cat > /tmp/gitlab.basile.uha.fr.cnf << EOF
 [ req ]
 default_bits       = 2048
 distinguished_name = req_distinguished_name
@@ -27,19 +27,19 @@ countryName                = FR
 stateOrProvinceName        = GRAND EST
 localityName               = COLMAR
 organizationName           = IUT
-commonName                 = gitlab.basile.local
+commonName                 = gitlab.basile.uha.fr
 [ req_ext ]
 subjectAltName = @alt_names
 [alt_names]
-DNS.1  = gitlab.basile.local
+DNS.1  = gitlab.basile.uha.fr
 EOF
 
-openssl genpkey -out /etc/gitlab/ssl/gitlab.basile.local.key -algorithm RSA -pkeyopt rsa_keygen_bits:2048
-openssl req -new -key /etc/gitlab/ssl/gitlab.basile.local.key -out /tmp/gitlab.basile.local.csr -config /tmp/gitlab.basile.local.cnf
-openssl x509 -signkey /etc/gitlab/ssl/gitlab.basile.local.key -in /tmp/gitlab.basile.local.csr -req -copy_extensions copyall -days 365 -out /etc/gitlab/ssl/gitlab.basile.local.crt
+openssl genpkey -out /etc/gitlab/ssl/gitlab.basile.uha.fr.key -algorithm RSA -pkeyopt rsa_keygen_bits:2048
+openssl req -new -key /etc/gitlab/ssl/gitlab.basile.uha.fr.key -out /tmp/gitlab.basile.uha.fr.csr -config /tmp/gitlab.basile.uha.fr.cnf
+openssl x509 -signkey /etc/gitlab/ssl/gitlab.basile.uha.fr.key -in /tmp/gitlab.basile.uha.fr.csr -req -copy_extensions copyall -days 365 -out /etc/gitlab/ssl/gitlab.basile.uha.fr.crt
 
 echo "Installing certificate on Debian/Ubuntu system..."
-cp /etc/gitlab/ssl/gitlab.basile.local.crt /usr/local/share/ca-certificates/gitlab.basile.local.crt
+cp /etc/gitlab/ssl/gitlab.basile.uha.fr.crt /usr/local/share/ca-certificates/gitlab.basile.uha.fr.crt
 update-ca-certificates
 
 # 4. Install GitLab CE package
@@ -51,20 +51,20 @@ GITLAB_DOMAIN="${GITLAB_DOMAIN:-localhost}"
 GITLAB_EXTERNAL_URL="http://$GITLAB_DOMAIN"
 
 echo "Installing GitLab CE package with HTTP configuration..."
-EXTERNAL_URL="http://gitlab.basile.local" apt-get install -y gitlab-ce
+EXTERNAL_URL="http://gitlab.basile.uha.fr" apt-get install -y gitlab-ce
 
 # 5. Configure HTTPS
 echo "Configuring HTTPS for GitLab..."
 cat > /etc/gitlab/gitlab.rb << EOF
-external_url 'https://gitlab.basile.local'
+external_url 'https://gitlab.basile.uha.fr'
 nginx['redirect_http_to_https'] = true
-nginx['ssl_certificate'] = "/etc/gitlab/ssl/gitlab.basile.local.crt"
-nginx['ssl_certificate_key'] = "/etc/gitlab/ssl/gitlab.basile.local.key"
+nginx['ssl_certificate'] = "/etc/gitlab/ssl/gitlab.basile.uha.fr.crt"
+nginx['ssl_certificate_key'] = "/etc/gitlab/ssl/gitlab.basile.uha.fr.key"
 
 # Registry settings
-registry_external_url 'https://gitlab.basile.local:5050'
-registry_nginx['ssl_certificate'] = "/etc/gitlab/ssl/gitlab.basile.local.crt"
-registry_nginx['ssl_certificate_key'] = "/etc/gitlab/ssl/gitlab.basile.local.key"
+registry_external_url 'https://gitlab.basile.uha.fr:5050'
+registry_nginx['ssl_certificate'] = "/etc/gitlab/ssl/gitlab.basile.uha.fr.crt"
+registry_nginx['ssl_certificate_key'] = "/etc/gitlab/ssl/gitlab.basile.uha.fr.key"
 EOF
 
 # 6. Reconfigure GitLab
@@ -77,8 +77,8 @@ curl -fsSL https://get.docker.com -o get-docker.sh
 sh get-docker.sh
 
 # 8. Install cert for registry
-mkdir -p /etc/docker/certs.d/gitlab.basile.local:5050
-cp /etc/gitlab/ssl/gitlab.basile.local.crt /etc/docker/certs.d/gitlab.basile.local:5050/ca.crt
+mkdir -p /etc/docker/certs.d/gitlab.basile.uha.fr:5050
+cp /etc/gitlab/ssl/gitlab.basile.uha.fr.crt /etc/docker/certs.d/gitlab.basile.uha.fr:5050/ca.crt
 systemctl restart docker
 
 # 9. Install gitlab-runner
@@ -95,7 +95,9 @@ options {
     directory "/var/cache/bind";
     
     forwarders {
-        10.30.255.254;
+        10.9.0.241;
+        10.9.0.240;
+        10.129.4.241;
     };
 
     allow-query { any; };
@@ -108,75 +110,98 @@ EOF
 
 # Configure zones
 cat > /etc/bind/named.conf.local << EOF
-zone "basile.local" {
+zone "basile.uha.fr" {
     type master;
-    file "/etc/bind/zones/db.basile.local";
+    file "/etc/bind/zones/db.basile.uha.fr";
 };
 
-zone "30.10.in-addr.arpa" {
+zone "4.129.10.in-addr.arpa" {
     type master;
-    file "/etc/bind/zones/db.10.30";
+    file "/etc/bind/zones/db.10.129.4";
+};
+
+zone "5.129.10.in-addr.arpa" {
+    type master;
+    file "/etc/bind/zones/db.10.129.5";
 };
 EOF
 # Create zone directory
 mkdir -p /etc/bind/zones
 # Create forward zone file
-cat > /etc/bind/zones/db.basile.local << EOF
+cat > /etc/bind/zones/db.basile.uha.fr << EOF
 \$TTL    604800
-@       IN      SOA     ns1.basile.local. admin.basile.local. (
+@       IN      SOA     ns1.basile.uha.fr. admin.basile.uha.fr. (
                   1     ; Serial
              604800     ; Refresh
               86400     ; Retry
             2419200     ; Expire
              604800 )   ; Negative Cache TTL
 ;
-@       IN      NS      ns1.basile.local.
-ns1     IN      A       10.30.1.11
+@       IN      NS      ns1.basile.uha.fr.
+ns1     IN      A       10.129.4.241
 
-; Specific entry for kube.basile.local
-kube IN      A       10.30.1.12
-kube IN      A       10.30.1.13
-kube IN      A       10.30.1.14
+; Specific entry for kube.basile.uha.fr
+kube IN      A       10.129.4.242
+kube IN      A       10.129.4.243
+kube IN      A       10.129.4.244
 
 ; Wildcard for kube subdomain pointing to all masters
-*.kube IN      A       10.30.1.12
-*.kube IN      A       10.30.1.13
-*.kube IN      A       10.30.1.14
+*.kube IN      A       10.129.4.242
+*.kube IN      A       10.129.4.243
+*.kube IN      A       10.129.4.244
 
 ; Kubernetes masters
-master1 IN      A       10.30.1.12
-master2 IN      A       10.30.1.13
-master3 IN      A       10.30.1.14
+master1 IN      A       10.129.4.242
+master2 IN      A       10.129.4.243
+master3 IN      A       10.129.4.244
 
 ; GitLab server
-gitlab  IN      A       10.30.1.11
+gitlab  IN      A       10.129.4.241
 EOF
-# Create reverse zone file
-cat > /etc/bind/zones/db.10.30 << EOF
+
+# Create reverse zone files
+cat > /etc/bind/zones/db.10.129.4 << EOF
 \$TTL    604800
-@       IN      SOA     ns1.basile.local. admin.basile.local. (
+@       IN      SOA     ns1.basile.uha.fr. admin.basile.uha.fr. (
                   1     ; Serial
              604800     ; Refresh
               86400     ; Retry
             2419200     ; Expire
              604800 )   ; Negative Cache TTL
 ;
-@       IN      NS      ns1.basile.local.
+@       IN      NS      ns1.basile.uha.fr.
 
 ; PTR Records
-11      IN      PTR     gitlab.basile.local.
-12      IN      PTR     master1.basile.local.
-13      IN      PTR     master2.basile.local.
-14      IN      PTR     master3.basile.local.
+241     IN      PTR     gitlab.basile.uha.fr.
+242     IN      PTR     master1.basile.uha.fr.
+243     IN      PTR     master2.basile.uha.fr.
+244     IN      PTR     master3.basile.uha.fr.
 EOF
+
+cat > /etc/bind/zones/db.10.129.5 << EOF
+\$TTL    604800
+@       IN      SOA     ns1.basile.uha.fr. admin.basile.uha.fr. (
+                  1     ; Serial
+             604800     ; Refresh
+              86400     ; Retry
+            2419200     ; Expire
+             604800 )   ; Negative Cache TTL
+;
+@       IN      NS      ns1.basile.uha.fr.
+
+; PTR Records for 10.129.5.x hosts if any
+EOF
+
 # Validate configuration
 named-checkconf
-named-checkzone basile.local /etc/bind/zones/db.basile.local
-named-checkzone 30.10.in-addr.arpa /etc/bind/zones/db.10.30
+named-checkzone basile.uha.fr /etc/bind/zones/db.basile.uha.fr
+named-checkzone 4.129.10.in-addr.arpa /etc/bind/zones/db.10.129.4
+named-checkzone 5.129.10.in-addr.arpa /etc/bind/zones/db.10.129.5
+
 # Restart and enable BIND9
 systemctl restart named
 systemctl enable named
-echo "DNS Server configured with domain basile.local"
+echo "DNS Server configured with domain basile.uha.fr"
 
 # 11. Copy admin password generated by gitlab to /home/ubuntu
 echo "Copying admin password to /home/ubuntu..."
@@ -187,7 +212,7 @@ chown ubuntu:ubuntu /home/ubuntu/gitlab_admin_password.txt
 
 echo "================================================================"
 echo "GitLab installation complete!"
-echo "Access GitLab at https://gitlab.basile.local"
-echo "DNS server configured for basile.local domain"
+echo "Access GitLab at https://gitlab.basile.uha.fr"
+echo "DNS server configured for basile.uha.fr domain"
 echo "Host configured to use local DNS server"
 echo "================================================================"
