@@ -15,3 +15,4 @@ cert-secret.yml
 .vscode
 values.yaml
 *.tfvars
+install_gitlab.sh
