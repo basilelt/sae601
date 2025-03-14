@@ -19,15 +19,15 @@ This Terraform project deploys both GitLab CE on a Ubuntu 24.04 VM and a Kuberne
 1. Initialize Terraform:
 
 ```bash
-terraform init (-reconfigure)
-terraform validate
-terraform plan -out=plan.out
+tofu init (-reconfigure)
+tofu validate
+tofu plan -out=plan.out
 ```
 
 2. Deploy the container and install GitLab:
 
 ```bash
-terraform apply plan.out
+tofu apply plan.out
 ```
 
 The deployment process automatically:
@@ -40,15 +40,15 @@ The deployment process automatically:
 1. Initialize and deploy the Kubernetes VMs:
 
 ```bash
-terraform init -reconfigure
-terraform validate
-terraform plan -out=plan.out
+tofu init -reconfigure
+tofu validate
+tofu plan -out=plan.out
 ```
 
 2. Deploy the container and install GitLab:
 
 ```bash
-terraform apply plan.out
+tofu apply plan.out
 ```
 
 The deployment process automatically:
