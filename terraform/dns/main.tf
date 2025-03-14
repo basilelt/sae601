@@ -19,18 +19,14 @@ resource "proxmox_virtual_environment_container" "dns_primary" {
   vm_id        = var.dns_primary_container_id
   started      = true
   
-  # Template source
-  template_file_id = var.container_template_file_id
-  
-  # Features
-  features {
-    nesting = true
-    fuse    = true
+  # Template source - using the correct attribute
+  operating_system {
+    template_file_id = var.container_template_file_id
   }
   
-  # Operating system settings
-  operating_system {
-    type = "debian"
+  # Features - only use nesting which is allowed
+  features {
+    nesting = true
   }
   
   # Container settings
@@ -42,7 +38,7 @@ resource "proxmox_virtual_environment_container" "dns_primary" {
   }
   
   # Root filesystem
-  rootfs {
+  disk {
     datastore_id = var.storage_pool
     size         = 8
   }
@@ -51,25 +47,34 @@ resource "proxmox_virtual_environment_container" "dns_primary" {
   network_interface {
     name     = "eth0"
     bridge   = var.network_bridge
-    ip_addresses = ["${var.dns_primary_ip}/24"]
-    gateway     = var.gateway_ip
   }
   
+  # Set the IP configuration
   initialization {
     hostname = "dns-primary"
+    ip_config {
+      ipv4 {
+        address = "${var.dns_primary_ip}/24"
+        gateway = var.gateway_ip
+      }
+    }
     dns {
       domain  = var.domain
       servers = var.nameserver
     }
+    
+    # Add SSH key through cloud-init style
     user_account {
-      username = "root"
-      password = var.root_password
-      keys     = [var.ssh_public_keys]
+      keys = [var.ssh_public_keys]
     }
   }
   
+  # Unprivileged container
+  unprivileged = true
+  
   # Provide some identifying information
-  tags = ["dns", "primary"]
+  description = "Primary DNS server"
+  tags        = ["dns", "primary"]
 }
 
 # Secondary DNS server container
@@ -78,18 +83,13 @@ resource "proxmox_virtual_environment_container" "dns_secondary" {
   vm_id        = var.dns_secondary_container_id
   started      = true
   
-  # Template source
-  template_file_id = var.container_template_file_id
-  
-  # Features
-  features {
-    nesting = true
-    fuse    = true
+  operating_system {
+    template_file_id = var.container_template_file_id
   }
   
-  # Operating system settings
-  operating_system {
-    type = "debian"
+  # Features - only use nesting which is allowed
+  features {
+    nesting = true
   }
   
   # Container settings
@@ -101,7 +101,7 @@ resource "proxmox_virtual_environment_container" "dns_secondary" {
   }
   
   # Root filesystem
-  rootfs {
+  disk {
     datastore_id = var.storage_pool
     size         = 8
   }
@@ -110,25 +110,34 @@ resource "proxmox_virtual_environment_container" "dns_secondary" {
   network_interface {
     name     = "eth0"
     bridge   = var.network_bridge
-    ip_addresses = ["${var.dns_secondary_ip}/24"]
-    gateway     = var.gateway_ip
   }
   
+  # Set the IP configuration
   initialization {
     hostname = "dns-secondary"
+    ip_config {
+      ipv4 {
+        address = "${var.dns_secondary_ip}/24"
+        gateway = var.gateway_ip
+      }
+    }
     dns {
       domain  = var.domain
       servers = var.nameserver
     }
+    
+    # Add SSH key through cloud-init style
     user_account {
-      username = "root"
-      password = var.root_password
-      keys     = [var.ssh_public_keys]
+      keys = [var.ssh_public_keys]
     }
   }
   
+  # Unprivileged container
+  unprivileged = true
+  
   # Provide some identifying information
-  tags = ["dns", "secondary"]
+  description = "Secondary DNS server"
+  tags        = ["dns", "secondary"]
 }
 
 # Use local-exec to wait for primary DNS container to be accessible
