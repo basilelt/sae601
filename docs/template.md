@@ -58,6 +58,10 @@ Enable the QEMU Guest Agent with this command:
 qm set 9000 --agent enabled=1
 ```
 
+```bash
+apt-get update && apt-get install qemu-guest-agent
+```
+
 Note: The QEMU Guest Agent will be automatically installed in Ubuntu cloud images, but it needs to be enabled in the VM configuration.
 
 ## Convert VM to Template

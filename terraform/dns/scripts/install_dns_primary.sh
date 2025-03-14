@@ -7,7 +7,7 @@ set -e
 echo "Starting primary DNS server installation script..."
 
 # Get the secondary DNS server IP if passed as environment variable
-DNS_SECONDARY_IP=${DNS_SECONDARY_IP:-"10.129.4.249"}
+DNS_SECONDARY_IP=${DNS_SECONDARY_IP:-"10.129.4.248"}
 
 # 1. Update system and install prerequisites
 apt-get update && apt-get upgrade -y
@@ -24,7 +24,6 @@ options {
     forwarders {
         10.9.0.241;
         10.9.0.240;
-        10.129.4.241;
     };
 
     allow-query { any; };
@@ -34,7 +33,7 @@ options {
     notify yes;
 
     recursion yes;
-    dnssec-validation no;
+    dnssec-validation yes;
     listen-on { any; };
 };
 EOF
@@ -82,22 +81,22 @@ ns1     IN      A       $(hostname -I | awk '{print $1}')
 ns2     IN      A       ${DNS_SECONDARY_IP}
 
 ; Specific entry for kube.basile.uha.fr
-kube IN      A       10.129.4.242
 kube IN      A       10.129.4.243
 kube IN      A       10.129.4.244
+kube IN      A       10.129.4.245
 
 ; Wildcard for kube subdomain pointing to all masters
-*.kube IN      A       10.129.4.242
 *.kube IN      A       10.129.4.243
 *.kube IN      A       10.129.4.244
+*.kube IN      A       10.129.4.245
 
 ; Kubernetes masters
-master1 IN      A       10.129.4.242
-master2 IN      A       10.129.4.243
-master3 IN      A       10.129.4.244
+master1 IN      A       10.129.4.243
+master2 IN      A       10.129.4.244
+master3 IN      A       10.129.4.245
 
 ; GitLab server
-gitlab  IN      A       10.129.4.241
+gitlab  IN      A       10.129.4.242
 EOF
 
 # Create reverse zone files
@@ -114,10 +113,10 @@ cat > /etc/bind/zones/db.10.129.4 << EOF
 @       IN      NS      ns2.basile.uha.fr.
 
 ; PTR Records
-241     IN      PTR     gitlab.basile.uha.fr.
-242     IN      PTR     master1.basile.uha.fr.
-243     IN      PTR     master2.basile.uha.fr.
-244     IN      PTR     master3.basile.uha.fr.
+242     IN      PTR     gitlab.basile.uha.fr.
+243     IN      PTR     master1.basile.uha.fr.
+244     IN      PTR     master2.basile.uha.fr.
+245     IN      PTR     master3.basile.uha.fr.
 $(echo $(hostname -I | awk '{print $1}') | cut -d. -f4)    IN      PTR     ns1.basile.uha.fr.
 $(echo ${DNS_SECONDARY_IP} | cut -d. -f4)    IN      PTR     ns2.basile.uha.fr.
 EOF
@@ -137,14 +136,18 @@ cat > /etc/bind/zones/db.10.129.5 << EOF
 ; PTR Records for 10.129.5.x hosts if any
 EOF
 
+# Set permissions for BIND9
+chown -R bind:bind /var/cache/bind /etc/bind/zones
+
 # Validate configuration
+echo "Validating BIND9 configuration..."
 named-checkconf
 named-checkzone basile.uha.fr /etc/bind/zones/db.basile.uha.fr
 named-checkzone 4.129.10.in-addr.arpa /etc/bind/zones/db.10.129.4
 named-checkzone 5.129.10.in-addr.arpa /etc/bind/zones/db.10.129.5
 
 # Restart and enable BIND9
-systemctl restart named
+systemctl restart named || systemctl status named
 systemctl enable named
 echo "Primary DNS Server configured with domain basile.uha.fr"
 

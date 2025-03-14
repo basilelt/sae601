@@ -9,7 +9,7 @@ apt-get update
 apt-get upgrade -y
 
 # Install required dependencies
-apt-get install -y curl ca-certificates tzdata perl
+apt-get install -y tzdata
 
 # Set up basic system configuration
 timedatectl set-timezone Europe/Paris

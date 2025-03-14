@@ -53,20 +53,20 @@ D -- pull/push --> Re
 - L'environnement réseau sera configuré en mode bridge pour les VM
 - Un distribution Linux disposant des [packages nécessaires](https://about.gitlab.com/install/)
 - Installer [docker](https://docs.docker.com/engine/install/)
-- Définir le fqdn local de votre instance ex: gitlab.basile.local et l'ajouter à votre fichier /etc/hosts
+- Définir le fqdn local de votre instance ex: gitlab.basile.uha.fr et l'ajouter à votre fichier /etc/hosts
 - Créer un certificat auto-signé qui sera associé à votre instance
 
 ## Certificat
 
-L' exemple suivant permet d'obtenir un certificat auto-signé associé au FQDN gitlab.basile.local
+L' exemple suivant permet d'obtenir un certificat auto-signé associé au FQDN gitlab.basile.uha.fr
 
-1.Générer la clé privée gitlab.basile.local.key
+1.Générer la clé privée gitlab.basile.uha.fr.key
 
 ```bash
-openssl genpkey -out gitlab.basile.local.key -algorithm RSA -pkeyopt rsa_keygen_bits:2048
+openssl genpkey -out gitlab.basile.uha.fr.key -algorithm RSA -pkeyopt rsa_keygen_bits:2048
 ```
 
-2.Créer le fichier gitlab.basile.local.cnf
+2.Créer le fichier gitlab.basile.uha.fr.cnf
 
 ```conf
 [ req ]
@@ -79,30 +79,30 @@ countryName                = FR
 stateOrProvinceName        = GRAND EST
 localityName               = COLMAR
 organizationName           = IUT
-commonName                 = gitlab.basile.local
+commonName                 = gitlab.basile.uha.fr
 [ req_ext ]
 subjectAltName = @alt_names
 [alt_names]
-DNS.1  = gitlab.basile.local
+DNS.1  = gitlab.basile.uha.fr
 ```
 
-3.Générer le CSR gitlab.basile.local.csr
+3.Générer le CSR gitlab.basile.uha.fr.csr
 
 ```bash
-openssl req -new -key gitlab.basile.local.key -out gitlab.basile.local.csr -config gitlab.basile.local.cnf
+openssl req -new -key gitlab.basile.uha.fr.key -out gitlab.basile.uha.fr.csr -config gitlab.basile.uha.fr.cnf
 ```
 
 4.Signer et générer le certificat
 
 ```bash
-openssl x509 -signkey gitlab.basile.local.key -in gitlab.basile.local.csr -req -copy_extensions copyall -days 365 -out gitlab.basile.local.crt
+openssl x509 -signkey gitlab.basile.uha.fr.key -in gitlab.basile.uha.fr.csr -req -copy_extensions copyall -days 365 -out gitlab.basile.uha.fr.crt
 ```
 
 # Installation
 
 Installer **gitlab-ce** en suivant la [procédure d'installation](https://about.gitlab.com/install/) Official Linux package et en prenant en compte les informations ci dessous.
 
-:information: L'exemple ci dessous correspond à l'installation d'une instance gitlab.basile.local sur Ubuntu
+:information: L'exemple ci dessous correspond à l'installation d'une instance gitlab.basile.uha.fr sur Ubuntu
 
 ## Etape 1
 
@@ -119,10 +119,10 @@ curl https://packages.gitlab.com/install/repositories/gitlab/gitlab-ce/script.de
 Installer les packages en déclarant dans un premier temps l'url d'accès en http
 
 ```bash
-sudo EXTERNAL_URL="http://gitlab.basile.local" apt-get install gitlab-ce
+sudo EXTERNAL_URL="http://gitlab.basile.uha.fr" apt-get install gitlab-ce
 ```
 
-:check_mark_button: L'accès http://gitlab.basile.local doit être foncionnel
+:check_mark_button: L'accès http://gitlab.basile.uha.fr doit être foncionnel
 
 # Configuration
 
@@ -132,11 +132,11 @@ Suivre les différentes [étapes de configuration](https://docs.gitlab.com/omnib
 
 :information: Ignorer les étapes optionnelles
 
-:check_mark_button: L'accès https://gitlab.basile.local doit être fonctionnel
+:check_mark_button: L'accès https://gitlab.basile.uha.fr doit être fonctionnel
 
 ## Registry
 
-La registry interne Gitlab sera accessible à travers le domaine Gitlab dans notre exemple gitlab.basile.local
+La registry interne Gitlab sera accessible à travers le domaine Gitlab dans notre exemple gitlab.basile.uha.fr
 
 Suivre les différentes [étapes de configuration](https://docs.gitlab.com/ee/administration/packages/container_registry.html#configure-container-registry-under-an-existing-gitlab-domain)
 
@@ -147,8 +147,8 @@ Suivre les différentes [étapes de configuration](https://docs.gitlab.com/ee/ad
 Configurer le [certificat auto-signé](Certificat) en tant que root CA
 
 ```bash
-sudo mkdir -p /etc/docker/certs.d/gitlab.basile.local:5050
-sudo cp gitlab.basile.local.crt /etc/docker/certs.d/gitlab.basile.local:5050/ca.crt
+sudo mkdir -p /etc/docker/certs.d/gitlab.basile.uha.fr:5050
+sudo cp gitlab.basile.uha.fr.crt /etc/docker/certs.d/gitlab.basile.uha.fr:5050/ca.crt
 ```
 
 Redémarrer le service docker
@@ -162,7 +162,7 @@ Ajouter votre utilisateur au groupe docker, cela vous permettra d'utiliser la co
 :check_mark_button: L'authentification auprès de la registry doit être foncionnel
 
 ```bash
-docker login gitlab.basile.local:5050
+docker login gitlab.basile.uha.fr:5050
 ```
 
 ### Etape 4
@@ -170,12 +170,12 @@ docker login gitlab.basile.local:5050
 Avant de réaliser l'enregistrement du runner auprès de votre instance gitlab, copier le certificat auto signé de votre instance vers le dossier de configuration du service gitlab-runner.
 
 ```bash
-sudo cp /etc/gitlab/ssl/gitlab.basile.local.crt /etc/gitlab-runner/certs/gitlab.basile.local.crt
+sudo cp /etc/gitlab/ssl/gitlab.basile.uha.fr.crt /etc/gitlab-runner/certs/gitlab.basile.uha.fr.crt
 ```
 
 Créer un runner au niveau de votre instance gitlab en suivant la [procédure d'installation](https://docs.gitlab.com/ee/ci/runners/runners_scope.html#create-an-instance-runner-with-a-runner-authentication-token), avec les paramètres suivants :
 
-- gitlab url : https://gitlab.basile.local
+- gitlab url : https://gitlab.basile.uha.fr
 - job tags : ```shared, docker``` et check run untagged jobs
 - name : ```runner```
 - executor : ```docker```

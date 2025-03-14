@@ -2,7 +2,7 @@ terraform {
   required_providers {
     proxmox = {
       source  = "bpg/proxmox"
-      version = "0.73.0"
+      version = "0.73.1"
     }
   }
 }
@@ -17,6 +17,7 @@ resource "proxmox_virtual_environment_vm" "gitlab" {
   node_name    = var.proxmox_node
   name         = "gitlab"
   description  = "GitLab server VM"
+  tags         = ["gitlab", "server"]
   vm_id        = var.gitlab_vm_id
   
   # Clone from template with storage target specified
@@ -38,7 +39,7 @@ resource "proxmox_virtual_environment_vm" "gitlab" {
     type    = "host"
   }
   memory {
-    dedicated = 8192
+    dedicated = 16384
   }
   
   # Disk configuration

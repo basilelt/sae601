@@ -2,246 +2,218 @@ terraform {
   required_providers {
     proxmox = {
       source  = "bpg/proxmox"
-      version = "0.73.0"
+      version = "0.73.1"
     }
   }
 }
 
 provider "proxmox" {
-  endpoint  = var.proxmox_api_url
-  api_token = var.proxmox_api_token
-  insecure  = true
+  endpoint      = var.proxmox_api_url
+  api_token     = var.proxmox_api_token
+  insecure      = var.proxmox_tls_insecure
+  tmp_dir       = "/tmp"
 }
 
 # Primary DNS server container
 resource "proxmox_virtual_environment_container" "dns_primary" {
-  node_name    = var.proxmox_node
-  vm_id        = var.dns_primary_container_id
-  started      = true
+  node_name = var.proxmox_node
+  vm_id     = var.dns_primary_container_id
+  started   = true
+  tags      = ["dns", "primary"]
   
-  # Template source - using the correct attribute
-  operating_system {
-    template_file_id = var.container_template_file_id
-  }
-  
-  # Features - only use nesting which is allowed
-  features {
-    nesting = true
-  }
-  
-  # Container settings
-  cpu {
-    cores = 1
-  }
-  memory {
-    dedicated = 512
-  }
-  
-  # Root filesystem
-  disk {
-    datastore_id = var.storage_pool
-    size         = 8
-  }
-  
-  # Network configuration
-  network_interface {
-    name     = "eth0"
-    bridge   = var.network_bridge
-  }
-  
-  # Set the IP configuration
   initialization {
-    hostname = "dns-primary"
+    hostname = "ns1"
+    
     ip_config {
       ipv4 {
         address = "${var.dns_primary_ip}/24"
         gateway = var.gateway_ip
       }
     }
+    
     dns {
       domain  = var.domain
       servers = var.nameserver
     }
     
-    # Add SSH key through cloud-init style
     user_account {
-      keys = [var.ssh_public_keys]
+      keys     = [var.ssh_public_keys]
+      password = var.root_password
     }
   }
   
-  # Unprivileged container
-  unprivileged = true
-  
-  # Provide some identifying information
-  description = "Primary DNS server"
-  tags        = ["dns", "primary"]
-}
-
-# Secondary DNS server container
-resource "proxmox_virtual_environment_container" "dns_secondary" {
-  node_name    = var.proxmox_node
-  vm_id        = var.dns_secondary_container_id
-  started      = true
-  
-  operating_system {
-    template_file_id = var.container_template_file_id
-  }
-  
-  # Features - only use nesting which is allowed
-  features {
-    nesting = true
-  }
-  
-  # Container settings
   cpu {
     cores = 1
   }
+  
   memory {
     dedicated = 512
+    swap      = 0
   }
   
-  # Root filesystem
+  operating_system {
+    template_file_id = var.container_template_file_id
+    type             = "debian"
+  }
+
+  network_interface {
+    name   = "eth0"
+    bridge = var.network_bridge
+  }
+  
   disk {
     datastore_id = var.storage_pool
     size         = 8
   }
   
-  # Network configuration
-  network_interface {
-    name     = "eth0"
-    bridge   = var.network_bridge
+  unprivileged = true
+  start_on_boot = true
+  
+  # Connection for provisioning
+  connection {
+    type        = "ssh"
+    user        = "root"
+    private_key = file(var.ssh_private_key_path)
+    host        = var.dns_primary_ip
   }
   
-  # Set the IP configuration
+  # Wait for system to be available
+  provisioner "remote-exec" {
+    inline = ["echo 'System is up'"]
+  }
+  
+  # Provisioning - Basic setup
+  provisioner "file" {
+    source      = "${path.module}/scripts/setup.sh"
+    destination = "/tmp/setup.sh"
+  }
+  
+  provisioner "remote-exec" {
+    inline = [
+      "chmod +x /tmp/setup.sh",
+      "/tmp/setup.sh",
+      "sleep 5"
+    ]
+  }
+  
+  # Provisioning - DNS primary setup
+  provisioner "file" {
+    source      = "${path.module}/scripts/install_dns_primary.sh"
+    destination = "/tmp/install_dns_primary.sh"
+  }
+  
+  provisioner "remote-exec" {
+    inline = [
+      "chmod +x /tmp/install_dns_primary.sh",
+      "DNS_SECONDARY_IP=${var.dns_secondary_ip} /tmp/install_dns_primary.sh"
+    ]
+  }
+}
+
+# Secondary DNS server container
+resource "proxmox_virtual_environment_container" "dns_secondary" {
+  node_name = var.proxmox_node
+  vm_id     = var.dns_secondary_container_id
+  started   = true
+  tags      = ["dns", "secondary"]
+  
   initialization {
-    hostname = "dns-secondary"
+    hostname = "ns2"
+    
     ip_config {
       ipv4 {
         address = "${var.dns_secondary_ip}/24"
         gateway = var.gateway_ip
       }
     }
+    
     dns {
       domain  = var.domain
       servers = var.nameserver
     }
     
-    # Add SSH key through cloud-init style
     user_account {
-      keys = [var.ssh_public_keys]
+      keys     = [var.ssh_public_keys]
+      password = var.root_password
     }
   }
   
-  # Unprivileged container
+  cpu {
+    cores = 1
+  }
+  
+  memory {
+    dedicated = 512
+    swap      = 0
+  }
+  
+  operating_system {
+    template_file_id = var.container_template_file_id
+    type             = "debian"
+  }
+
+  network_interface {
+    name   = "eth0"
+    bridge = var.network_bridge
+  }
+  
+  disk {
+    datastore_id = var.storage_pool
+    size         = 8
+  }
+  
   unprivileged = true
+  start_on_boot = true
   
-  # Provide some identifying information
-  description = "Secondary DNS server"
-  tags        = ["dns", "secondary"]
-}
-
-# Use local-exec to wait for primary DNS container to be accessible
-resource "null_resource" "wait_for_primary_dns" {
-  depends_on = [proxmox_virtual_environment_container.dns_primary]
-
-  provisioner "local-exec" {
-    command = <<-EOT
-      echo "Waiting for primary DNS container to become accessible..."
-      count=0
-      max_attempts=30
-      until ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i ${var.ssh_private_key_path} root@${var.dns_primary_ip} echo "DNS primary is accessible" || [ $count -eq $max_attempts ]
-      do
-        sleep 10
-        count=$((count+1))
-        echo "Attempt $count/$max_attempts: Waiting for primary DNS to be accessible..."
-      done
-    EOT
+  # Connection for provisioning
+  connection {
+    type        = "ssh"
+    user        = "root"
+    private_key = file(var.ssh_private_key_path)
+    host        = var.dns_secondary_ip
   }
-}
-
-# Use local-exec to wait for secondary DNS container to be accessible
-resource "null_resource" "wait_for_secondary_dns" {
-  depends_on = [proxmox_virtual_environment_container.dns_secondary]
-
-  provisioner "local-exec" {
-    command = <<-EOT
-      echo "Waiting for secondary DNS container to become accessible..."
-      count=0
-      max_attempts=30
-      until ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i ${var.ssh_private_key_path} root@${var.dns_secondary_ip} echo "DNS secondary is accessible" || [ $count -eq $max_attempts ]
-      do
-        sleep 10
-        count=$((count+1))
-        echo "Attempt $count/$max_attempts: Waiting for secondary DNS to be accessible..."
-      done
-    EOT
+  
+  # Wait for system to be available
+  provisioner "remote-exec" {
+    inline = ["echo 'System is up'"]
   }
-}
-
-# Provision primary DNS server
-resource "null_resource" "primary_dns_provisioner" {
-  depends_on = [null_resource.wait_for_primary_dns]
-
-  # Copy setup scripts
+  
+  # Provisioning - Basic setup
   provisioner "file" {
-    source      = "${path.module}/scripts/install_dns_primary.sh"
-    destination = "/tmp/install_dns.sh"
-    
-    connection {
-      type        = "ssh"
-      user        = "root"
-      host        = var.dns_primary_ip
-      private_key = file(var.ssh_private_key_path)
-    }
+    source      = "${path.module}/scripts/setup.sh"
+    destination = "/tmp/setup.sh"
   }
   
-  # Execute setup scripts
   provisioner "remote-exec" {
     inline = [
-      "chmod +x /tmp/install_dns.sh",
-      "echo 'Installing primary DNS server...'",
-      "DNS_SECONDARY_IP=${var.dns_secondary_ip} bash /tmp/install_dns.sh"
+      "chmod +x /tmp/setup.sh",
+      "/tmp/setup.sh",
+      "sleep 5"
     ]
-    
-    connection {
-      type        = "ssh"
-      user        = "root"
-      host        = var.dns_primary_ip
-      private_key = file(var.ssh_private_key_path)
-    }
   }
-}
-
-# Provision secondary DNS server (Only after primary is configured)
-resource "null_resource" "secondary_dns_provisioner" {
-  depends_on = [null_resource.wait_for_secondary_dns, null_resource.primary_dns_provisioner]
-
-  # Copy setup scripts
+  
+  # Provisioning - DNS secondary setup
   provisioner "file" {
     source      = "${path.module}/scripts/install_dns_secondary.sh"
-    destination = "/tmp/install_dns.sh"
-    
-    connection {
-      type        = "ssh"
-      user        = "root"
-      host        = var.dns_secondary_ip
-      private_key = file(var.ssh_private_key_path)
-    }
+    destination = "/tmp/install_dns_secondary.sh"
   }
   
-  # Execute setup scripts
   provisioner "remote-exec" {
     inline = [
-      "chmod +x /tmp/install_dns.sh",
-      "echo 'Installing secondary DNS server...'",
-      "DNS_PRIMARY_IP=${var.dns_primary_ip} bash /tmp/install_dns.sh"
+      "chmod +x /tmp/install_dns_secondary.sh",
+      "DNS_PRIMARY_IP=${var.dns_primary_ip} /tmp/install_dns_secondary.sh"
     ]
-    
-    connection {
-      type        = "ssh"
-      user        = "root"
-      host        = var.dns_secondary_ip
-      private_key = file(var.ssh_private_key_path)
-    }
   }
+  
+  # Make sure primary is created first
+  depends_on = [proxmox_virtual_environment_container.dns_primary]
+}
+
+# Output the DNS server IPs
+output "dns_primary_ip" {
+  value = var.dns_primary_ip
+}
+
+output "dns_secondary_ip" {
+  value = var.dns_secondary_ip
 }

@@ -24,13 +24,12 @@ options {
     forwarders {
         10.9.0.241;
         10.9.0.240;
-        10.129.4.241;
     };
 
     allow-query { any; };
     allow-recursion { any; };
     recursion yes;
-    dnssec-validation no;
+    dnssec-validation yes;
     listen-on { any; };
 };
 EOF
@@ -60,10 +59,11 @@ EOF
 chown -R bind:bind /var/cache/bind
 
 # Validate configuration
+echo "Validating BIND9 configuration..."
 named-checkconf
 
 # Restart and enable BIND9
-systemctl restart named
+systemctl restart named || systemctl status named
 systemctl enable named
 echo "Secondary DNS Server configured with primary at ${DNS_PRIMARY_IP}"
 

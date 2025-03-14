@@ -2,7 +2,7 @@ terraform {
   required_providers {
     proxmox = {
       source  = "bpg/proxmox"
-      version = "0.73.0"
+      version = "0.73.1"
     }
   }
 }
@@ -17,7 +17,8 @@ resource "proxmox_virtual_environment_vm" "kubernetes_nodes" {
   count        = length(var.ip_address_range)
   node_name    = var.proxmox_node
   name         = "kube-master${count.index + 1}"
-  description  = "Kubernetes master ${count.index + 1}"
+  description  = "Kubernetes master node ${count.index + 1} - K8s control plane"
+  tags         = ["kubernetes", "master", "control-plane"]
   vm_id        = var.gitlab_vm_id_range[count.index]
   
   # Clone from template with storage target specified
@@ -34,12 +35,12 @@ resource "proxmox_virtual_environment_vm" "kubernetes_nodes" {
   
   # Resource allocation
   cpu {
-    cores   = 6
+    cores   = 4
     sockets = 1
     type    = "host"
   }
   memory {
-    dedicated = 2048
+    dedicated = 8192
   }
   
   # Disk configuration
