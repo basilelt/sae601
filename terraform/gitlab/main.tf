@@ -33,7 +33,7 @@ resource "proxmox_virtual_environment_vm" "gitlab" {
   
   # Resource allocation
   cpu {
-    cores   = 6
+    cores   = 4
     sockets = 1
     type    = "host"
   }

@@ -6,13 +6,35 @@ This Terraform project deploys both GitLab CE on a Ubuntu 24.04 VM and a Kuberne
 
 - Proxmox server running at proxmox.basile.local
 - Ubuntu 24.04 cloud image template for all VMs (with qemu-guest-agent installed)
+- Template Debian 12
 - Terraform installed on your local machine
 - API token for Proxmox with appropriate permissions
 
 ## Setup
 
 1. Clone this repository
-2. Edit `terraform.tfvars` with your specific values:
+2. Edit `terraform.tfvars.example` with your specific values:
+
+### DNS Server Deployment
+
+1. Initialize Terraform:
+
+```bash
+tofu init (-reconfigure)
+tofu validate
+tofu plan -out=plan.out
+```
+
+2. Deploy the container and install Bind9:
+
+```bash
+tofu apply plan.out
+```
+
+The deployment process automatically:
+- Provisions the DNS VM
+- Runs the setup script that installs the auto-update utility
+- Installs and configures DNS bind9
 
 ### GitLab Deployment
 
