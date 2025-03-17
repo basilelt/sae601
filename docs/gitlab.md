@@ -176,10 +176,8 @@ sudo cp /etc/gitlab/ssl/gitlab.basile.uha.fr.crt /etc/gitlab-runner/certs/gitlab
 Créer un runner au niveau de votre instance gitlab en suivant la [procédure d'installation](https://docs.gitlab.com/ee/ci/runners/runners_scope.html#create-an-instance-runner-with-a-runner-authentication-token), avec les paramètres suivants :
 
 - gitlab url : https://gitlab.basile.uha.fr
-- job tags : ```shared, docker``` et check run untagged jobs
+- job tags : ```shared, docker, kubernetes``` et check run untagged jobs
 - name : ```runner```
-- executor : ```docker```
-- default docker image : ```alpine:latest```
 
 ## Ssh
 
