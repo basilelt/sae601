@@ -19,7 +19,6 @@ helm repo add gitlab https://charts.gitlab.io
 ```bash
 cat k8s/runner/gitlab.basile.uha.fr.crt | base64 -w 0  # Copy the output in k8s/runner/cert-secret.yml
 kubectl apply -f k8s/runner/cert-secret.yml
-helm repo update
 helm install --namespace gitlab-runner gitlab-runner -f k8s/runner/values.yaml gitlab/gitlab-runner
 ```
 
