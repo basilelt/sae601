@@ -45,7 +45,7 @@ resource "proxmox_virtual_environment_vm" "gitlab" {
   # Disk configuration
   disk {
     datastore_id = var.storage_pool
-    size         = 32
+    size         = 64
     interface    = "scsi0"
     discard      = "on"
     file_format  = "raw"

@@ -1,4 +1,4 @@
-1. Log into your Proxmox web interface (at https://proxmox.basile.local:8006 in your case)
+1. Log into your Proxmox web interface (at https://pve.<url>:8006 in your case)
 
 2. Navigate to Datacenter → Permissions → API Tokens
 
@@ -10,15 +10,15 @@
 - Privilege Separation: Typically unchecked for Terraform automation
 - Expiration date: Optional, leave empty for no expiration
 
-5. Click "Create"
+1. Click "Create"
 
-6. **IMPORTANT**: When the token is created, Proxmox will display the secret once and only once. Copy this secret value immediately.
+2. **IMPORTANT**: When the token is created, Proxmox will display the secret once and only once. Copy this secret value immediately.
 
-7. Paste this secret into your terraform.tfvars file, replacing "your-token-secret"
+3. Paste this secret into your terraform.tfvars file, replacing "your-token-secret"
 
-8. Click "Add" under the "API Token Permissions" section
+4. Click "Add" under the "API Token Permissions" section
 
-9. Configure the permission:
+5. Configure the permission:
 - Path: /
 - API Token: terraform@pam!terraform-token
 - Role: Administrator

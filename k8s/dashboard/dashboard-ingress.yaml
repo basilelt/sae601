@@ -9,7 +9,7 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-  - host: dashboard.kube.basile.local
+  - host: dashboard.kube.basile.uha.fr
     http:
       paths:
       - path: /

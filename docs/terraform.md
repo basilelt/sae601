@@ -4,7 +4,7 @@ This Terraform project deploys both GitLab CE on a Ubuntu 24.04 VM and a Kuberne
 
 ## Prerequisites
 
-- Proxmox server running at proxmox.basile.local
+- Proxmox server running at pve.<url>
 - Ubuntu 24.04 cloud image template for all VMs (with qemu-guest-agent installed)
 - Template Debian 12
 - Terraform installed on your local machine
@@ -83,11 +83,11 @@ The deployment process automatically:
 1. Add the following entry to your local `/etc/hosts` file:
 
 ```
-<vm_ip> gitlab.basile.local
+<vm_ip> gitlab.<url>
 ```
 A DNS server is also present on the gitlab VM, you could use it instead.
 
-2. Access GitLab at https://gitlab.basile.local and set up the admin account
+2. Access GitLab at https://gitlab.<url> and set up the admin account
 
 ### Kubernetes
 

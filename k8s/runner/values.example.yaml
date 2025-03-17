@@ -1,7 +1,7 @@
 # GitLab Runner Helm Chart values.yaml
 
 ## The GitLab Server URL (with http/https) and Registration Token
-gitlabUrl: https://gitlab.basile.local/
+gitlabUrl: https://<gitlab_url>/
 runnerToken: "your_token"
 
 ## Runner configuration
