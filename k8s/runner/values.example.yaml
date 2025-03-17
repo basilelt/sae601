@@ -14,7 +14,7 @@ runners:
         image = "alpine:3.21"
       [runners.custom_build_dir]
         enabled = false
-  tags: "kubernetes,cluster"
+  tags: "kubernetes,docker,shared"
   runUntagged: true
   protected: false
   executor: kubernetes
@@ -31,7 +31,7 @@ runners:
         memory: "300Mi"
       limits:
         cpu: "500m"
-        memory: "500Mi"
+        memory: "512Mi"
 
 # Registration command args
 runnerRegistrationCommandArgs: ["--token", "{{ .Values.runnerToken }}", "--url", "{{ .Values.gitlabUrl }}",  "--tls-skip-verify"]
