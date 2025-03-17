@@ -13,6 +13,6 @@
 cert-secret.yml
 .ansible
 .vscode
-values.yaml
+**/runner/values.yaml
 *.tfvars
 install_gitlab.sh
