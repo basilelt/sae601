@@ -20,6 +20,17 @@ graph TD
     B --> F[GitLab Registry]
 ```
 
+```mermaid
+flowchart LR
+    U(Développeur)
+    G(GitLab CE)
+    R(GitLab Runner Kubernetes)
+    D(Docker Daemon)
+    Re(Registry Docker)
+
+    U-->|push code|G-->|déclenche pipeline|R-->|build/test/deploy|D-->|push images|Re
+```
+
 ### Proxmox Virtualization
 - Serves as the hypervisor for all VMs
 - Managed via API through Terraform providers
