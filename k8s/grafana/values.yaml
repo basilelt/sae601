@@ -8,9 +8,13 @@ service:
 
 persistence:
   enabled: true
+  existingClaim: grafana
   size: 10Gi
+  storageClassName: "manual"
+  accessModes:
+    - ReadWriteOnce
 
-# Basic datasource setup - assuming Prometheus is running in the cluster
+# Configure Prometheus datasource
 datasources:
   datasources.yaml:
     apiVersion: 1
@@ -20,6 +24,9 @@ datasources:
       url: http://prometheus-server.monitoring.svc.cluster.local
       access: proxy
       isDefault: true
+      jsonData:
+        timeInterval: "5s"
+        httpMethod: "POST"
 
 # Set up default dashboards
 dashboardProviders:
@@ -43,10 +50,26 @@ resources:
     cpu: 100m
     memory: 128Mi
 
-# Default dashboards to include
+# Default dashboards to include - adding more Kubernetes-specific ones
 dashboards:
   default:
-    kubernetes:
-      gnetId: 10000
+    kubernetes-cluster:
+      gnetId: 315
+      revision: 3
+      datasource: Prometheus
+    kubernetes-pods:
+      gnetId: 6417
+      revision: 1
+      datasource: Prometheus
+    kubernetes-nodes:
+      gnetId: 11074
+      revision: 1
+      datasource: Prometheus
+    k8s-system-resources:
+      gnetId: 11802
+      revision: 1
+      datasource: Prometheus
+    k8s-capacity-planning:
+      gnetId: 5228
       revision: 1
       datasource: Prometheus
