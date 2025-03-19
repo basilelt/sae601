@@ -16,3 +16,11 @@ spec:
   hostPath:
     path: "/mnt/data/prometheus"
   persistentVolumeReclaimPolicy: Retain
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+          - key: kubernetes.io/hostname
+            operator: In
+            values:
+            - master1
