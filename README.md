@@ -291,4 +291,3 @@ For detailed documentation on specific components, refer to:
 - [Kubernetes Dashboard Configuration](docs/kube-dash.md)
 - [GitLab Runner Setup](docs/runner.md)
 - [Grafana and Prometheus Setup](docs/grafana.md)
-

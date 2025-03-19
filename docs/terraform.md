@@ -103,14 +103,13 @@ kubectl get pods --all-namespaces
 ## Resource Specifications
 
 ### GitLab VM
-- 6 CPU cores
-- 8GB RAM 
+- 4 CPU cores
+- 16GB RAM 
 - 32GB storage
 - Network configured in bridge mode
 
 ### Kubernetes VMs
-- Control Plane: 6 CPU cores, 2048MB RAM, 32GB storage
-- Worker Nodes: 6 CPU cores, 2048MB RAM, 32GB storage each
+- Control Plane: 6 CPU cores, 12GB RAM, 32GB storage
 - All VMs configured with bridge networking
 
 ## Notes
